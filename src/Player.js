@@ -60,7 +60,7 @@ export default class Player {
 
     /** @type {Array.<SnakePart>} */
     parts = [];
-    partsSize = 10;
+    partsSize = 32;
 
     tick = 0;
     maxSpeed = 16;
