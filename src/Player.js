@@ -1,4 +1,5 @@
 "use strict";
+import Food from "./Food";
 import Game from "./Game";
 
 class SnakePart {
@@ -8,13 +9,14 @@ class SnakePart {
     parentPlayer;
 
     /**
-     * @param {Number} relativeInitialX The relative distance from the Player position in partsSize.
-     * @param {Number} relativeInitialY The relative distance from the Player position in partsSize.
+     * @param {Number} xPos The relative distance from the Player position in partsSize.
+     * @param {Number} yPos The relative distance from the Player position in partsSize.
      * @param {Player} parentPlayer The Player that this part belongs to
      */
-    constructor(relativeInitialX, relativeInitialY, parentPlayer) {
-        this.x = parentPlayer.x + (relativeInitialX + 1) * relativeInitialX;
-        this.y = parentPlayer.y + (relativeInitialY + 1) * relativeInitialY;
+    constructor(xPos, yPos, parentPlayer) {
+        this.x = xPos;
+        this.y = yPos;
+
         this.parentPlayer = parentPlayer;
     }
 
@@ -37,7 +39,7 @@ class SnakePart {
     draw(ctx) {
         ctx.fillStyle = this.style;
         const PartRect = new Path2D();
-        PartRect.rect(this.x, this.y, this.parentPlayer.partsSize, this.parentPlayer.partsSize);
+        PartRect.rect(this.x + 1, this.y + 1, this.parentPlayer.partsSize - 1, this.parentPlayer.partsSize - 1);
         
         ctx.fill(PartRect);
     }
@@ -60,10 +62,10 @@ export default class Player {
 
     /** @type {Array.<SnakePart>} */
     parts = [];
-    partsSize = 32;
+    partsSize = 24;
 
     tick = 0;
-    maxSpeed = 16;
+    maxSpeed = 24;
 
     /**
      * @param {String} username Player username
@@ -84,7 +86,13 @@ export default class Player {
 
     #init() {
         for(let i = 0; i < 3; i++) {
-            this.parts.push(new SnakePart(0, i, this));
+            this.parts.push(
+                new SnakePart(
+                    this.x,
+                    this.y + (this.partsSize * i),
+                    this
+                )
+            );
         }
 
         window.addEventListener('keydown', (event) => this.#handleKeyDown(event));
@@ -132,14 +140,14 @@ export default class Player {
     update() {
         this.tick++;
 
-        if(this.tick === Math.min(10, this.maxSpeed - Math.floor(this.parts.length / this.maxSpeed))) {
+        if(this.tick === Math.min(24, this.maxSpeed - Math.floor(this.parts.length / this.maxSpeed))) {
             this.tick = 0;
             this.#walk();
         }
     }
 
     #walk() {
-        const velocity = this.partsSize + 1;
+        const velocity = this.partsSize;
 
         switch (this.direction) {
             case Direction.Up:
@@ -159,22 +167,54 @@ export default class Player {
                 break;
         }
 
+        // Sideways walls check
+        if(Math.round(this.x / this.partsSize) > this.game.canvasPropWidth) {
+            this.x = 0;
+        }
+        if(this.x < 0) {
+            this.x = this.partsSize * this.game.canvasPropWidth;
+        }
+
+        // Top / Bottom walls check
+        if(Math.round(this.y / this.partsSize) > this.game.canvasPropHeight) {
+            this.y = 0;
+        }
+        if(this.y < 0) {
+            this.y = this.partsSize * this.game.canvasPropHeight;
+        }
+
         for(let i = this.parts.length-1; i > 0; i--){
             this.parts[i].setPosition(this.parts[i-1].position);
         }
-
+        
         this.parts[0].setPosition({x: this.x, y: this.y});
     }
 
     /** @param {CanvasRenderingContext2D} ctx */
     draw(ctx) {
-        ctx.fillStyle = this.game.GameColors.five;
-        console.log(this.username);
-        ctx.fillText(`${this.username} | ${this.parts.length - 3}`, this.x + this.partsSize + 6, this.y);
-
         this.parts.forEach((part, i) => {
             part.style = this.game.GameColors[Object.keys(this.game.GameColors)[i]];
             part.draw(ctx);
-        })
+        });
+
+        ctx.fillStyle = this.game.GameColors.five;
+        ctx.fillText(`${this.username} | ${this.parts.length - 3}`, this.x + this.partsSize + 14, this.y - 14);
+    }
+
+    /** @param {Food} thisFood */
+    isEating(thisFood) {
+        if(
+            thisFood.x >= this.x &&
+            thisFood.x + thisFood.size <= this.x + this.partsSize
+        ) {
+            if(
+                thisFood.y >= this.y &&
+                thisFood.y + thisFood.size <= this.y + this.partsSize
+            ) {
+                const lastPart = this.parts[this.parts.length - 1];
+                this.parts.push(new SnakePart(lastPart.x, lastPart.y, this));
+                this.game.levelUp();
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
 "use strict";
+import Food from "./Food";
 import Player from "./Player";
 
 export default class Game {
@@ -7,11 +8,18 @@ export default class Game {
     score = 0;
 
     player;
+    /** @type {Food} */
+    food;
 
     /** @type {HTMLCanvasElement} */
     canvas;
     /** @type {CanvasRenderingContext2D} */
     ctx;
+
+    actorsSize;
+    canvasPropWidth;
+    canvasPropHeight;
+
     gameLoop;
 
     GameColors = {
@@ -26,7 +34,17 @@ export default class Game {
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
 
-        this.player = new Player(username, this, this.canvas.width / 2, this.canvas.height / 2);
+        this.actorsSize = 24;
+        this.canvasPropWidth = Math.round(this.canvas.width / this.actorsSize);
+        this.canvasPropHeight = Math.round(this.canvas.height / this.actorsSize);
+
+        const playerInitPos = {
+            x: Math.round(Math.random() * this.canvasPropWidth) * this.actorsSize,
+            y: Math.round(Math.random() * this.canvasPropHeight) * this.actorsSize
+        };
+        this.player = new Player(username, this, playerInitPos.x, playerInitPos.y);
+
+        this.#newFood();
 
         this.initialTime = new Date();
     }
@@ -45,8 +63,10 @@ export default class Game {
     }
 
     update() {
-        this.time = 'Time: ' + (new Date(Date.now() - this.initialTime.getMilliseconds()).toLocaleString('en', { dateStyle: 'medium' }));
         this.player.update();
+        this.player.isEating(this.food);
+
+        this.time = 'Time: ' + (new Date(Date.now() - this.initialTime.getMilliseconds()).toLocaleString('en', { dateStyle: 'medium' }));
         this.draw();
     }
 
@@ -58,6 +78,7 @@ export default class Game {
         this.ctx.fillText(this.time, 16, 16);
 
         this.player.draw(this.ctx);
+        this.food.draw(this.ctx);
     }
 
     #fillStyle(style) {
@@ -66,5 +87,18 @@ export default class Game {
 
     #strokeStyle(style) {
         this.ctx.strokeStyle = style;
+    }
+
+    levelUp() {
+        this.score++;
+        this.#newFood();
+    }
+
+    #newFood() {
+        const foodInitPos = {
+            x: Math.round(Math.random() * this.canvasPropWidth) * this.actorsSize,
+            y: Math.round(Math.random() * this.canvasPropHeight) * this.actorsSize
+        };
+        this.food = new Food(foodInitPos.x, foodInitPos.y, this.actorsSize, this.GameColors.five);
     }
 }

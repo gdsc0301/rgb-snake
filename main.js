@@ -23,7 +23,6 @@ function init() {
       if(e.key === 'Escape') gameInstance.stop();
     })
 
-    console.log(gameInstance);
     if(gameInstance.init()){
       console.log('Init done');
       canvas.focus();
