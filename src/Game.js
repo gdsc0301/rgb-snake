@@ -17,8 +17,6 @@ export default class Game {
     ctx;
 
     actorsSize;
-    canvasPropWidth;
-    canvasPropHeight;
 
     gameLoop;
 
@@ -30,13 +28,20 @@ export default class Game {
         five: '#04D9D9'
     };
 
+    canvasProp;
+
     constructor(username, canvas) {
         this.canvas = canvas;
-        this.ctx = this.canvas.getContext('2d');
+        this.ctx = this.canvas.getContext('2d');;
+
+        window.addEventListener('resize', () => {
+            this.canvas.width = window.innerWidth - 2;
+            this.canvas.height = window.innerHeight - 2;
+
+            this.ctx = this.canvas.getContext('2d');
+        })
 
         this.actorsSize = 24;
-        this.canvasPropWidth = Math.round(this.canvas.width / this.actorsSize);
-        this.canvasPropHeight = Math.round(this.canvas.height / this.actorsSize);
 
         const playerInitPos = {
             x: Math.round(Math.random() * this.canvasPropWidth) * this.actorsSize,
@@ -100,5 +105,13 @@ export default class Game {
             y: Math.round(Math.random() * this.canvasPropHeight) * this.actorsSize
         };
         this.food = new Food(foodInitPos.x, foodInitPos.y, this.actorsSize, this.GameColors.five);
+    }
+           
+    get canvasPropWidth() {
+        return Math.round(this.canvas.width / this.actorsSize);
+    }
+
+    get canvasPropHeight() {
+        return Math.round(this.canvas.height / this.actorsSize);
     }
 }
