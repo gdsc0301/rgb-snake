@@ -140,7 +140,7 @@ export default class Player {
     update() {
         this.tick++;
 
-        if(this.tick === Math.min(24, this.maxSpeed - Math.floor(this.parts.length / this.maxSpeed))) {
+        if(this.tick === Math.min(12, this.maxSpeed - Math.floor(this.parts.length / this.maxSpeed))) {
             this.tick = 0;
             this.#walk();
         }
